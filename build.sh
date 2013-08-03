@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version 2.0.1
+# Version 2.0.2
 
 # We don't allow scrollback buffer
 echo -e '\0033\0143'
@@ -25,7 +25,7 @@ txtrst=$(tput sgr0)             # Reset
 
 # Local defaults, can be overriden by environment
 : ${PREFS_FROM_SOURCE:="false"}
-: ${USE_CCACHE:="false"}
+: ${USE_CCACHE:="true"}
 : ${CCACHE_NOSTATS:="false"}
 : ${CCACHE_DIR:="$(dirname $OUT)/ccache"}
 : ${THREADS:="$(cat /proc/cpuinfo | grep "^processor" | wc -l)"}
@@ -64,7 +64,7 @@ else
 	MINOR=$(cat $DIR/build/core/version_defaults.mk | grep 'PLATFORM_VERSION := *' | awk '{print $3}' | cut -f2 -d= | cut -f2 -d.)
 	MAINTENANCE=$(cat $DIR/build/core/version_defaults.mk | grep 'PLATFORM_VERSION := *' | awk '{print $3}' | cut -f2 -d= | cut -f3 -d.)
 fi
-VERSION=$VENDOR-$MAJOR.$MINOR.$MAINTENANCE
+VERSION=$VENDOR-$MAJOR.$MINOR$([ -n "$MAINTENANCE" ] && echo .)$MAINTENANCE
 
 # If there is no extra parameter, reduce parameters index by 1
 if [ "$EXTRAS" == "true" ] || [ "$EXTRAS" == "false" ]; then
@@ -188,7 +188,7 @@ elif [ -r vendor/pa/get-prebuilts ]; then
 		./get-prebuilts && touch prebuilt/common/.get-prebuilts
 		popd > /dev/null
 	fi
-else
+elif [ -r vendor/aosp/get-prebuilts ]; then
 	if [ -r vendor/aosp/.get-prebuilts ]; then
 		echo -e "${bldgrn}Already downloaded prebuilts${txtrst}"
 	else
@@ -197,6 +197,8 @@ else
 		./get-prebuilts && touch .get-prebuilts
 		popd > /dev/null
 	fi
+else
+	echo -e "${bldcya}No prebuilts script in this tree${txtrst}"
 fi
 
 if [ -n "${INTERACTIVE}" ]; then
@@ -220,10 +222,6 @@ else
 		echo -e "${bldblu}Lunching device [$DEVICE]${txtrst}"
 		export PREFS_FROM_SOURCE
 		lunch "pa_$DEVICE-userdebug";
-
-		#echo -e "${bldblu}Saving build manifest${txtrst}"
-		#repo manifest -o vendor/pa/prebuilt/common/etc/build-manifest.xml -r
-		#echo -e ""
 
 		echo -e "${bldblu}Starting compilation${txtrst}"
 		mka bacon
@@ -250,6 +248,6 @@ if [ -n "${CCACHE_DIR}" ]; then
 	echo -e "${bldgrn}ccache size is ${txtrst} ${grn}${cache2}${txtrst} (was ${grn}${cache1}${txtrst})"
 fi
 
-# Finished? Get elapsed time
+# Get elapsed time
 res2=$(date +%s.%N)
 echo -e "${bldgrn}Total time elapsed: ${txtrst}${grn}$(echo "($res2 - $res1) / 60"|bc ) minutes ($(echo "$res2 - $res1"|bc ) seconds)${txtrst}"
