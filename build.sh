@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version 2.0.3
+# Version 2.0.4
 
 # We don't allow scrollback buffer
 echo -e '\0033\0143'
@@ -26,6 +26,7 @@ txtrst=$(tput sgr0)             # Reset
 # Local defaults, can be overriden by environment
 : ${PREFS_FROM_SOURCE:="false"}
 : ${EXTRA_CM_PACKAGES:="true"}
+: ${NO_OTA_BUILD:="true"}
 : ${USE_CCACHE:="true"}
 : ${CCACHE_NOSTATS:="false"}
 : ${CCACHE_DIR:="$(dirname $OUT)/ccache"}
@@ -223,6 +224,7 @@ else
 		echo -e "${bldblu}Lunching device [$DEVICE]${txtrst}"
 		export PREFS_FROM_SOURCE
 		export EXTRA_CM_PACKAGES
+		export NO_OTA_BUILD
 		lunch "pa_$DEVICE-userdebug";
 
 		echo -e "${bldblu}Starting compilation${txtrst}"
